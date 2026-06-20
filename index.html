@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="theme-color" content="#2563eb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon-512.jpg">
+<title>理财管家</title>
+<style>
+/* ========== Reset ========== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#2563eb;--primary-light:#3b82f6;--primary-dark:#1d4ed8;
+  --success:#059669;--success-light:#10b981;
+  --warning:#d97706;--warning-light:#f59e0b;
+  --danger:#dc2626;--danger-light:#ef4444;
+  --bg:#f1f5f9;--bg-card:#ffffff;--bg-dark:#0f172a;
+  --text:#1e293b;--text-secondary:#64748b;--text-light:#94a3b8;
+  --border:#e2e8f0;--shadow:0 1px 3px rgba(0,0,0,.08);
+  --shadow-lg:0 4px 12px rgba(0,0,0,.1);
+  --radius:12px;--radius-sm:8px;
+  --nav-height:60px;
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+html{font-size:16px;-webkit-tap-highlight-color:transparent}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.5;
+  padding-bottom:calc(var(--nav-height) + var(--safe-bottom) + 12px);
+  overflow-x:hidden;
+}
+
+/* ========== Top Bar ========== */
+.top-bar{
+  position:sticky;top:0;z-index:100;
+  background:var(--primary);color:#fff;
+  padding:12px 16px;display:flex;align-items:center;justify-content:space-between;
+  box-shadow:0 2px 8px rgba(37,99,235,.3);
+}
+.top-bar h1{font-size:1.15rem;font-weight:700}
+.top-bar .actions{display:flex;gap:8px}
+.top-bar .actions button{
+  background:rgba(255,255,255,.15);border:none;color:#fff;
+  width:36px;height:36px;border-radius:50%;font-size:1.1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.top-bar .actions button:active{background:rgba(255,255,255,.3)}
+
+/* ========== Bottom Nav ========== */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:var(--bg-card);border-top:1px solid var(--border);
+  display:flex;height:var(--nav-height);
+  padding-bottom:var(--safe-bottom);
+  box-shadow:0 -2px 8px rgba(0,0,0,.06);
+}
+.bottom-nav button{
+  flex:1;border:none;background:none;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;
+  color:var(--text-light);font-size:.7rem;cursor:pointer;
+  transition:color .2s;
+}
+.bottom-nav button.active{color:var(--primary)}
+.bottom-nav button .nav-icon{font-size:1.3rem}
+.bottom-nav button:active{background:var(--bg)}
+
+/* ========== Pages ========== */
+.page{display:none;padding:16px;animation:fadeIn .25s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ========== Cards ========== */
+.card{
+  background:var(--bg-card);border-radius:var(--radius);
+  padding:16px;margin-bottom:12px;box-shadow:var(--shadow);
+}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.card-header h3{font-size:1rem;font-weight:600;color:var(--text)}
+.card-header .badge{
+  font-size:.75rem;padding:2px 8px;border-radius:20px;font-weight:600;
+}
+
+/* ========== Stats Row ========== */
+.stats-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.stat-card{
+  background:var(--bg-card);border-radius:var(--radius);padding:16px;
+  box-shadow:var(--shadow);text-align:center;
+}
+.stat-card .stat-value{font-size:1.5rem;font-weight:700;color:var(--primary)}
+.stat-card .stat-value.green{color:var(--success)}
+.stat-card .stat-value.orange{color:var(--warning)}
+.stat-card .stat-label{font-size:.8rem;color:var(--text-secondary);margin-top:4px}
+
+/* ========== Product List ========== */
+.product-item{
+  background:var(--bg-card);border-radius:var(--radius);
+  padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow);
+  cursor:pointer;transition:transform .15s;position:relative;
+}
+.product-item:active{transform:scale(.98)}
+.product-item.expiring{border-left:4px solid var(--warning)}
+.product-item.expired{border-left:4px solid var(--danger);opacity:.7}
+.product-item .pi-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.product-item .pi-name{font-size:1rem;font-weight:600;flex:1;margin-right:8px}
+.product-item .pi-bank{font-size:.8rem;color:var(--text-secondary);background:var(--bg);padding:2px 8px;border-radius:4px}
+.product-item .pi-amount{font-size:1.2rem;font-weight:700;color:var(--primary);margin-bottom:4px}
+.product-item .pi-meta{display:flex;gap:12px;font-size:.8rem;color:var(--text-secondary);flex-wrap:wrap}
+.product-item .pi-meta span{display:flex;align-items:center;gap:3px}
+.product-item .pi-rate{color:var(--success);font-weight:600}
+.product-item .pi-days{font-weight:600}
+.product-item .pi-days.warn{color:var(--warning)}
+.product-item .pi-days.over{color:var(--danger)}
+.product-item .pi-actions{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  display:flex;gap:6px;
+}
+.product-item .pi-actions button{
+  width:32px;height:32px;border-radius:50%;border:none;
+  background:var(--bg);color:var(--text-secondary);font-size:.85rem;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+.product-item .pi-actions button:active{background:var(--border)}
+
+/* ========== Section Title ========== */
+.section-title{
+  font-size:.9rem;font-weight:600;color:var(--text-secondary);
+  margin:16px 0 10px;display:flex;align-items:center;gap:6px;
+}
+.section-title .dot{width:6px;height:6px;border-radius:50%;background:var(--primary)}
+
+/* ========== Form ========== */
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px}
+.form-group input,.form-group select,.form-group textarea{
+  width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  font-size:1rem;background:var(--bg-card);color:var(--text);
+  transition:border-color .2s;
+  -webkit-appearance:none;
+}
+.form-group input:focus,.form-group select:focus{
+  outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.1);
+}
+.form-group .input-hint{font-size:.75rem;color:var(--text-light);margin-top:4px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ========== Buttons ========== */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:12px 24px;border:none;border-radius:var(--radius-sm);
+  font-size:1rem;font-weight:600;cursor:pointer;transition:all .2s;
+  width:100%;
+}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:active{background:var(--primary-dark)}
+.btn-success{background:var(--success);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-outline{background:none;border:1.5px solid var(--border);color:var(--text)}
+.btn-sm{padding:8px 16px;font-size:.85rem;width:auto}
+.btn-group{display:flex;gap:10px;margin-top:16px}
+
+/* ========== FAB ========== */
+.fab{
+  position:fixed;bottom:calc(var(--nav-height) + var(--safe-bottom) + 16px);right:16px;
+  width:56px;height:56px;border-radius:50%;border:none;
+  background:var(--primary);color:#fff;font-size:1.8rem;
+  box-shadow:0 4px 16px rgba(37,99,235,.4);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;z-index:90;
+  transition:transform .2s;
+}
+.fab:active{transform:scale(.9)}
+
+/* ========== Modal ========== */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;
+  display:none;align-items:flex-end;justify-content:center;
+}
+.modal-overlay.show{display:flex}
+.modal{
+  background:var(--bg-card);border-radius:var(--radius) var(--radius) 0 0;
+  width:100%;max-width:500px;max-height:90vh;overflow-y:auto;
+  padding:20px 16px calc(20px + var(--safe-bottom));
+  animation:slideUp .3s ease;
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.modal-header h2{font-size:1.15rem;font-weight:700}
+.modal-header .close-btn{
+  width:32px;height:32px;border-radius:50%;border:none;
+  background:var(--bg);color:var(--text-secondary);font-size:1.1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* ========== Toast ========== */
+.toast{
+  position:fixed;top:80px;left:50%;transform:translateX(-50%);
+  background:var(--bg-dark);color:#fff;padding:10px 20px;border-radius:20px;
+  font-size:.9rem;z-index:300;opacity:0;transition:opacity .3s;
+  pointer-events:none;white-space:nowrap;
+}
+.toast.show{opacity:1}
+
+/* ========== Empty State ========== */
+.empty-state{
+  text-align:center;padding:40px 20px;color:var(--text-light);
+}
+.empty-state .empty-icon{font-size:3rem;margin-bottom:12px}
+.empty-state p{font-size:.95rem}
+
+/* ========== Chart Container ========== */
+.chart-container{width:100%;height:260px;margin:12px 0}
+
+/* ========== History Item ========== */
+.history-item{
+  background:var(--bg-card);border-radius:var(--radius-sm);
+  padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.history-item .hi-info{flex:1}
+.history-item .hi-name{font-size:.95rem;font-weight:600}
+.history-item .hi-detail{font-size:.8rem;color:var(--text-secondary);margin-top:2px}
+.history-item .hi-profit{font-weight:700;font-size:1rem}
+.history-item .hi-profit.positive{color:var(--success)}
+.history-item .hi-profit.negative{color:var(--danger)}
+
+/* ========== Settings ========== */
+.settings-item{
+  background:var(--bg-card);border-radius:var(--radius-sm);
+  padding:14px 16px;margin-bottom:8px;box-shadow:var(--shadow);
+  display:flex;justify-content:space-between;align-items:center;cursor:pointer;
+}
+.settings-item:active{background:var(--bg)}
+.settings-item .si-left{display:flex;align-items:center;gap:10px}
+.settings-item .si-icon{font-size:1.2rem}
+.settings-item .si-label{font-size:.95rem;font-weight:500}
+.settings-item .si-desc{font-size:.8rem;color:var(--text-secondary)}
+.settings-item .si-right{color:var(--text-light);font-size:.9rem}
+
+/* ========== Alert Banner ========== */
+.alert-banner{
+  background:linear-gradient(135deg,#fef3c7,#fde68a);
+  border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;font-size:.9rem;
+}
+.alert-banner .alert-icon{font-size:1.2rem}
+
+/* ========== Scrollbar ========== */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* ========== Responsive ========== */
+@media(min-width:500px){
+  body{max-width:500px;margin:0 auto}
+  .bottom-nav{max-width:500px;left:50%;transform:translateX(-50%)}
+  .fab{right:calc(50% - 250px + 16px)}
+}
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="top-bar">
+  <h1>理财管家</h1>
+  <div class="actions">
+    <button onclick="App.showExport()" title="导出数据">📤</button>
+  </div>
+</div>
+
+<!-- Page: Home -->
+<div id="page-home" class="page active">
+  <div class="stats-row" id="stats-row"></div>
+  <div id="alert-area"></div>
+  <div class="section-title"><span class="dot"></span>持有中</div>
+  <div id="active-list"></div>
+</div>
+
+<!-- Page: Overview -->
+<div id="page-overview" class="page">
+  <div class="section-title"><span class="dot"></span>资产分布</div>
+  <div class="card">
+    <div class="chart-container" id="chart-bank"></div>
+  </div>
+  <div class="section-title"><span class="dot"></span>收益概览</div>
+  <div class="card">
+    <div class="chart-container" id="chart-profit"></div>
+  </div>
+</div>
+
+<!-- Page: History -->
+<div id="page-history" class="page">
+  <div class="section-title"><span class="dot"></span>已到期产品</div>
+  <div id="history-list"></div>
+</div>
+
+<!-- Page: Settings -->
+<div id="page-settings" class="page">
+  <div class="section-title"><span class="dot"></span>数据管理</div>
+  <div class="settings-item" onclick="App.showExport()">
+    <div class="si-left"><span class="si-icon">📤</span><div><div class="si-label">导出数据</div><div class="si-desc">导出为 JSON 文件备份</div></div></div>
+    <div class="si-right">›</div>
+  </div>
+  <div class="settings-item" onclick="App.triggerImport()">
+    <div class="si-left"><span class="si-icon">📥</span><div><div class="si-label">导入数据</div><div class="si-desc">从 JSON 文件恢复</div></div></div>
+    <div class="si-right">›</div>
+  </div>
+  <input type="file" id="import-file" accept=".json" style="display:none" onchange="App.handleImport(event)">
+  <div class="settings-item" onclick="App.clearExpired()">
+    <div class="si-left"><span class="si-icon">🗑️</span><div><div class="si-label">清除已到期记录</div><div class="si-desc">删除所有已到期产品</div></div></div>
+    <div class="si-right">›</div>
+  </div>
+  <div class="settings-item" onclick="App.clearAll()">
+    <div class="si-left"><span class="si-icon">⚠️</span><div><div class="si-label">清除所有数据</div><div class="si-desc" style="color:var(--danger)">此操作不可恢复</div></div></div>
+    <div class="si-right">›</div>
+  </div>
+  <div class="section-title" style="margin-top:24px"><span class="dot"></span>关于</div>
+  <div class="card" style="text-align:center;color:var(--text-secondary);font-size:.85rem">
+    <p>理财管家 v1.0</p>
+    <p style="margin-top:4px">数据完全存储在本地，不上传任何服务器</p>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fab" onclick="App.showForm()">+</button>
+
+<!-- Modal: Add/Edit Form -->
+<div class="modal-overlay" id="modal-form">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="form-title">添加产品</h2>
+      <button class="close-btn" onclick="App.closeForm()">✕</button>
+    </div>
+    <form id="product-form" onsubmit="App.saveProduct(event)">
+      <input type="hidden" id="f-id">
+      <div class="form-group">
+        <label>产品名称 *</label>
+        <input type="text" id="f-name" placeholder="例：稳利宝 90 天" required>
+      </div>
+      <div class="form-group">
+        <label>发行银行 *</label>
+        <input type="text" id="f-bank" placeholder="例：招商银行" required>
+      </div>
+      <div class="form-group">
+        <label>购买金额（元）*</label>
+        <input type="number" id="f-amount" placeholder="例：50000" step="0.01" min="0" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>起息日 *</label>
+          <input type="date" id="f-start" required>
+        </div>
+        <div class="form-group">
+          <label>到期日 *</label>
+          <input type="date" id="f-end" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>预期年化收益率（%）*</label>
+          <input type="number" id="f-rate" placeholder="例：3.5" step="0.01" min="0" required>
+        </div>
+        <div class="form-group">
+          <label>实际年化收益率（%）</label>
+          <input type="number" id="f-actual-rate" placeholder="到期后填写" step="0.01" min="0">
+          <div class="input-hint">到期后填写实际收益</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>备注</label>
+        <textarea id="f-notes" rows="2" placeholder="可选"></textarea>
+      </div>
+      <div class="btn-group">
+        <button type="button" class="btn btn-outline" onclick="App.closeForm()">取消</button>
+        <button type="submit" class="btn btn-primary" id="form-submit-btn">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Confirm -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal" style="text-align:center">
+    <p id="confirm-msg" style="font-size:1rem;margin-bottom:20px"></p>
+    <div class="btn-group">
+      <button class="btn btn-outline" onclick="App.closeConfirm()">取消</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="active" onclick="App.switchPage('home',this)">
+    <span class="nav-icon">📋</span><span>持仓</span>
+  </button>
+  <button onclick="App.switchPage('overview',this)">
+    <span class="nav-icon">📊</span><span>总览</span>
+  </button>
+  <button onclick="App.switchPage('history',this)">
+    <span class="nav-icon">📁</span><span>历史</span>
+  </button>
+  <button onclick="App.switchPage('settings',this)">
+    <span class="nav-icon">⚙️</span><span>设置</span>
+  </button>
+</nav>
+
+<script src="./app.js"></script>
+</body>
+</html>
